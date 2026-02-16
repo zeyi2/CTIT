@@ -1,9 +1,18 @@
 import sys
 import json
+import argparse
+from dataclasses import dataclass
 from typing import Dict, Union, List, Any, Tuple, Optional
 
 
-def parse_body(body: str) -> Tuple[str, str, str]:
+@dataclass
+class ParseResult:
+    pr_link: str
+    check_name: str
+    tidy_config: str
+
+
+def parse_body(body: str) -> ParseResult:
     """
     Parses the issue body to extract PR link, check name, and tidy configuration.
     """
@@ -39,22 +48,7 @@ def parse_body(body: str) -> Tuple[str, str, str]:
             f"{check_name}.{key}" if not key.startswith(check_name + ".") else key
         )
 
-        # Parse values
-        parsed_value: Union[str, int, float, bool]
-        if value.lower() == "true":
-            parsed_value = True
-        elif value.lower() == "false":
-            parsed_value = False
-        else:
-            try:
-                if "." in value:
-                    parsed_value = float(value)
-                else:
-                    parsed_value = int(value)
-            except ValueError:
-                parsed_value = value
-
-        check_options[full_key] = parsed_value
+        check_options[full_key] = value
 
     # Format as clang-tidy config string
     tidy_config: str = ""
@@ -62,23 +56,25 @@ def parse_body(body: str) -> Tuple[str, str, str]:
         config_dict: Dict[str, Any] = {"CheckOptions": check_options}
         tidy_config = json.dumps(config_dict)
 
-    return pr_link, check_name, tidy_config
+    return ParseResult(pr_link=pr_link, check_name=check_name, tidy_config=tidy_config)
 
 
 def main() -> None:
-    if len(sys.argv) < 2:
-        print("Usage: python3 parse_issue.py <output_env_file>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="Parse issue body for PR link, check name, and tidy configuration."
+    )
+    parser.add_argument("output_env_file", help="Path to the output environment file.")
+    args = parser.parse_args()
 
     try:
         body: str = sys.stdin.read()
-        pr_link, check_name, tidy_config = parse_body(body)
+        result = parse_body(body)
 
         # Write to GitHub Env file
-        with open(sys.argv[1], "a") as f:
-            f.write(f"PR_LINK<<EOF\n{pr_link}\nEOF\n")
-            f.write(f"CHECK_NAME<<EOF\n{check_name}\nEOF\n")
-            f.write(f"TIDY_CONFIG<<EOF\n{tidy_config}\nEOF\n")
+        with open(args.output_env_file, "a") as f:
+            f.write(f"PR_LINK<<EOF\n{result.pr_link}\nEOF\n")
+            f.write(f"CHECK_NAME<<EOF\n{result.check_name}\nEOF\n")
+            f.write(f"TIDY_CONFIG<<EOF\n{result.tidy_config}\nEOF\n")
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)

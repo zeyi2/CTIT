@@ -8,10 +8,12 @@ class TestParseIssue(unittest.TestCase):
         body = """
         https://github.com/llvm/llvm-project/pull/12345 bugprone-argument-comment
         """
-        pr_link, check_name, tidy_config = parse_body(body)
-        self.assertEqual(pr_link, "https://github.com/llvm/llvm-project/pull/12345")
-        self.assertEqual(check_name, "bugprone-argument-comment")
-        self.assertEqual(tidy_config, "")
+        result = parse_body(body)
+        self.assertEqual(
+            result.pr_link, "https://github.com/llvm/llvm-project/pull/12345"
+        )
+        self.assertEqual(result.check_name, "bugprone-argument-comment")
+        self.assertEqual(result.tidy_config, "")
 
     def test_readability_naming_options(self):
         body = """
@@ -20,17 +22,21 @@ class TestParseIssue(unittest.TestCase):
         VariablePrefix: v_
         IgnoreFailedSplit: true
         """
-        pr_link, check_name, tidy_config = parse_body(body)
-        self.assertEqual(pr_link, "https://github.com/llvm/llvm-project/pull/123")
-        self.assertEqual(check_name, "readability-identifier-naming")
+        result = parse_body(body)
+        self.assertEqual(
+            result.pr_link, "https://github.com/llvm/llvm-project/pull/123"
+        )
+        self.assertEqual(result.check_name, "readability-identifier-naming")
 
-        config = json.loads(tidy_config)
+        config = json.loads(result.tidy_config)
         opts = config["CheckOptions"]
         self.assertEqual(
             opts["readability-identifier-naming.VariableCase"], "camelBack"
         )
         self.assertEqual(opts["readability-identifier-naming.VariablePrefix"], "v_")
-        self.assertEqual(opts["readability-identifier-naming.IgnoreFailedSplit"], True)
+        self.assertEqual(
+            opts["readability-identifier-naming.IgnoreFailedSplit"], "true"
+        )
 
     def test_modernize_auto_options(self):
         body = """
@@ -38,24 +44,24 @@ class TestParseIssue(unittest.TestCase):
         MinTypeNameLength: 5
         RemoveStars: false
         """
-        pr_link, check_name, tidy_config = parse_body(body)
-        self.assertEqual(check_name, "readability-identifier-naming")
+        result = parse_body(body)
+        self.assertEqual(result.check_name, "readability-identifier-naming")
 
-        opts = json.loads(tidy_config)["CheckOptions"]
-        self.assertEqual(opts["readability-identifier-naming.MinTypeNameLength"], 5)
-        self.assertEqual(opts["readability-identifier-naming.RemoveStars"], False)
+        opts = json.loads(result.tidy_config)["CheckOptions"]
+        self.assertEqual(opts["readability-identifier-naming.MinTypeNameLength"], "5")
+        self.assertEqual(opts["readability-identifier-naming.RemoveStars"], "false")
 
     def test_full_prefix_consistency(self):
         body = """
         https://github.com/llvm/llvm-project/pull/789 readability-identifier-naming
         readability-identifier-naming.StrictMode: true
         """
-        _, check_name, tidy_config = parse_body(body)
-        self.assertEqual(check_name, "readability-identifier-naming")
+        result = parse_body(body)
+        self.assertEqual(result.check_name, "readability-identifier-naming")
 
-        config = json.loads(tidy_config)
-        self.assertIn(
-            "readability-identifier-naming.StrictMode", config["CheckOptions"]
+        config = json.loads(result.tidy_config)
+        self.assertEqual(
+            config["CheckOptions"]["readability-identifier-naming.StrictMode"], "true"
         )
         self.assertNotIn(
             "readability-identifier-naming.readability-identifier-naming.StrictMode",
