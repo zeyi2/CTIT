@@ -19,6 +19,7 @@ jobs:
   build:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'cpp' || github.event.label.name == 'c'
     runs-on: ubuntu-latest
+    container: ghcr.io/clang-tidy-infra/ctit-runner:latest
     timeout-minutes: 360
 
     permissions:
@@ -30,11 +31,6 @@ jobs:
         with:
           submodules: true
           fetch-depth: 1
-
-      - name: Install Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake ninja-build build-essential python3-dev zlib1g-dev python3-yaml zip unzip
 
       - name: Set up Git
         run: |
