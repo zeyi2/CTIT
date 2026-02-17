@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Optional
 from testers.base import BaseTester
 
+
 class CppcheckTester(BaseTester):
     source_dir: Path
     build_dir: Path
@@ -15,15 +16,20 @@ class CppcheckTester(BaseTester):
         self.cleanup_old_configs(self.source_dir)
         self.build_dir.mkdir(parents=True, exist_ok=True)
 
-        self.run_command([
-            "cmake",
-            "-S", str(self.source_dir),
-            "-B", str(self.build_dir),
-            "-G", "Ninja",
-            "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
-            "-DCMAKE_BUILD_TYPE=Release",
-            "-DBUILD_TESTS=ON"
-        ])
+        self.run_command(
+            [
+                "cmake",
+                "-S",
+                str(self.source_dir),
+                "-B",
+                str(self.build_dir),
+                "-G",
+                "Ninja",
+                "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+                "-DCMAKE_BUILD_TYPE=Release",
+                "-DBUILD_TESTS=ON",
+            ]
+        )
 
         self.run_command(["cmake", "--build", str(self.build_dir), "-j"])
 

@@ -7,11 +7,16 @@ from testers.projects.cppcheck import CppcheckTester
 from testers.projects.llvm import LLVMTester
 from testers.base import BaseTester
 
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run Clang-Tidy integration tests.")
     parser.add_argument("project", choices=["cppcheck", "llvm"], help="Project to test")
     parser.add_argument("check_name", help="Name of the clang-tidy check to run")
-    parser.add_argument("--config", help="Extra clang-tidy configuration", default=os.environ.get("TIDY_CONFIG"))
+    parser.add_argument(
+        "--config",
+        help="Extra clang-tidy configuration",
+        default=os.environ.get("TIDY_CONFIG"),
+    )
 
     args = parser.parse_args()
     root_dir = Path(os.getcwd())
@@ -19,7 +24,7 @@ def main() -> None:
     # Map project names to their respective tester classes
     project_map: Dict[str, Type[BaseTester]] = {
         "cppcheck": CppcheckTester,
-        "llvm": LLVMTester
+        "llvm": LLVMTester,
     }
 
     tester_class = project_map.get(args.project)
@@ -34,6 +39,7 @@ def main() -> None:
     except Exception as e:
         print(f"Error running tester for {args.project}: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

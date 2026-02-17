@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 
+
 class BaseTester:
     name: str
     root_dir: Path
@@ -22,19 +23,28 @@ class BaseTester:
         self.log_file = self.log_dir / f"{name.lower()}.log"
         self.llvm_build_dir = root_dir / "llvm-project" / "build"
         self.clang_tidy_bin = self.llvm_build_dir / "bin" / "clang-tidy"
-        self.run_tidy_script = root_dir / "llvm-project" / "clang-tools-extra" / "clang-tidy" / "tool" / "run-clang-tidy.py"
+        self.run_tidy_script = (
+            root_dir
+            / "llvm-project"
+            / "clang-tools-extra"
+            / "clang-tidy"
+            / "tool"
+            / "run-clang-tidy.py"
+        )
 
         self.log_dir.mkdir(parents=True, exist_ok=True)
         self._setup_logging()
 
     def _setup_logging(self) -> None:
-        logging.basicConfig(
-            level=logging.INFO,
-            format=f'[{self.name}] %(message)s'
-        )
+        logging.basicConfig(level=logging.INFO, format=f"[{self.name}] %(message)s")
         self.logger = logging.getLogger(self.name)
 
-    def run_command(self, cmd: List[str], cwd: Optional[Path] = None, env: Optional[Dict[str, str]] = None) -> subprocess.CompletedProcess[str]:
+    def run_command(
+        self,
+        cmd: List[str],
+        cwd: Optional[Path] = None,
+        env: Optional[Dict[str, str]] = None,
+    ) -> subprocess.CompletedProcess[str]:
         self.logger.info(f"Running command: {' '.join(cmd)}")
         result = subprocess.run(
             cmd,
@@ -42,7 +52,7 @@ class BaseTester:
             env={**os.environ, **(env or {})},
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            text=True
+            text=True,
         )
         if result.returncode != 0:
             self.logger.warning(f"Command failed with exit code {result.returncode}")
@@ -61,17 +71,28 @@ class BaseTester:
         if not self.clang_tidy_bin.exists():
             raise FileNotFoundError(f"clang-tidy not found at {self.clang_tidy_bin}")
         if not self.run_tidy_script.exists():
-            raise FileNotFoundError(f"run-clang-tidy.py not found at {self.run_tidy_script}")
+            raise FileNotFoundError(
+                f"run-clang-tidy.py not found at {self.run_tidy_script}"
+            )
 
-    def run_tidy(self, check_name: str, build_dir: Path, target_dir: Optional[Path] = None, extra_config: Optional[str] = None) -> subprocess.CompletedProcess[str]:
+    def run_tidy(
+        self,
+        check_name: str,
+        build_dir: Path,
+        target_dir: Optional[Path] = None,
+        extra_config: Optional[str] = None,
+    ) -> subprocess.CompletedProcess[str]:
         self.logger.info(f"Running clang-tidy for check: {check_name}")
 
         tidy_args: List[str] = [
-            "python3", str(self.run_tidy_script),
-            "-clang-tidy-binary", str(self.clang_tidy_bin),
-            "-p", str(build_dir),
+            "python3",
+            str(self.run_tidy_script),
+            "-clang-tidy-binary",
+            str(self.clang_tidy_bin),
+            "-p",
+            str(build_dir),
             f"-checks=-*,{check_name}",
-            "-quiet"
+            "-quiet",
         ]
 
         if extra_config:
