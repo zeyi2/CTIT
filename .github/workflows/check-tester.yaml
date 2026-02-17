@@ -69,17 +69,17 @@ jobs:
 
       - name: Run Check on cppcheck
         run: |
-          chmod +x testers/cppcheck.sh
-          ./testers/cppcheck.sh "${{ env.CHECK_NAME }}"
+          python3 run_tester.py cppcheck "${{ env.CHECK_NAME }}" --config "${{ env.TIDY_CONFIG }}"
         env:
           CHECK_NAME: ${{ env.CHECK_NAME }}
+          TIDY_CONFIG: ${{ env.TIDY_CONFIG }}
 
       - name: Run Check on LLVM
         run: |
-          chmod +x testers/llvm.sh
-          ./testers/llvm.sh "${{ env.CHECK_NAME }}"
+          python3 run_tester.py llvm "${{ env.CHECK_NAME }}" --config "${{ env.TIDY_CONFIG }}"
         env:
           CHECK_NAME: ${{ env.CHECK_NAME }}
+          TIDY_CONFIG: ${{ env.TIDY_CONFIG }}
 
       - name: Generate Report
         run: |
