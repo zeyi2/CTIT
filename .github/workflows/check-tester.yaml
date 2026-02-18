@@ -16,10 +16,27 @@ on:
     types: labeled
 
 jobs:
-  build:
+  determine-runner:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'cpp' || github.event.label.name == 'c'
     runs-on: ubuntu-latest
-    container: ghcr.io/clang-tidy-infra/ctit-runner:sha-a7e57e9
+    timeout-minutes: 1
+    outputs:
+      runner: ${{ steps.set-runner.outputs.use-runner }}
+    steps:
+      - name: Determine runner
+        id: set-runner
+        uses: mikehardy/runner-fallback-action@v1
+        with:
+          primary-runner: "self-hosted"
+          fallback-runner: "ubuntu-latest"
+          github-token: ${{ secrets.RUNNER_ACCESS_TOKEN }}
+
+  build:
+    needs: determine-runner
+    runs-on: ${{ fromJson(needs.determine-runner.outputs.runner) }}
+    container: 
+      image: ghcr.io/clang-tidy-infra/ctit-runner:sha-a7e57e9
+      options: --user root
     timeout-minutes: 360
 
     permissions:
@@ -35,6 +52,7 @@ jobs:
 
       - name: Set up Git
         run: |
+          git config --global --add safe.directory '*'
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git -C llvm-project checkout .
