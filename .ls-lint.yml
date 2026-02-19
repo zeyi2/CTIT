@@ -1,0 +1,12 @@
+ls:
+  .py: snake_case
+  .sh: snake_case
+  .yaml: kebab-case
+  .yml: kebab-case
+
+ignore:
+  - llvm-project
+  - test-projects
+  - venv
+  - .git
+  - ctit.egg-info
