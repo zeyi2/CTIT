@@ -61,6 +61,9 @@ jobs:
           git -C llvm-project checkout .
           git -C llvm-project clean -fdx
 
+      - name: Clone test projects
+        run: python3 testers/clone_projects.py --work-dir test_projects
+
       - name: Parse Inputs
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -85,12 +88,12 @@ jobs:
         run: bash build.sh
 
       - name: Run Check on cppcheck
-        run: bash testers/cppcheck.sh "${{ env.CHECK_NAME }}"
+        run: bash testers/cppcheck.sh "${{ env.CHECK_NAME }}" "$PWD/test_projects/cppcheck"
         env:
           CHECK_NAME: ${{ env.CHECK_NAME }}
 
       - name: Run Check on LLVM
-        run: bash testers/llvm.sh "${{ env.CHECK_NAME }}"
+        run: bash testers/llvm.sh "${{ env.CHECK_NAME }}" "$PWD/llvm-project"
         env:
           CHECK_NAME: ${{ env.CHECK_NAME }}
 
